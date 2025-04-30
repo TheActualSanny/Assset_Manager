@@ -8,7 +8,7 @@ class RegisterSerializer(serializers.ModelSerializer):
         To do so, pass an username and 2 password fields:
         password and confirm_password. 
     '''
-    confirm_password = serializers.CharField(max_length = 16, read_only = True)
+    confirm_password = serializers.CharField(max_length = 16)
     
     class Meta:
         model = User
@@ -40,7 +40,7 @@ class LoginSerializer(serializers.Serializer):
             exists in the User model.
         '''
         if authenticate(username = attrs.get('username'), password = attrs.get('password')):
-            return True
+            return attrs
         raise User.DoesNotExist('Make sure that the user with the given credentials exists!')
     
     def get_user(self):
