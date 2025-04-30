@@ -4,10 +4,11 @@ from django.contrib.auth.models import User
 
 class RegisterSerializer(serializers.ModelSerializer):
     '''
-        This serializer is used for registering the
-        user and validating the passwords.
+        This endpoint is used for registering a new user.
+        To do so, pass an username and 2 password fields:
+        password and confirm_password. 
     '''
-    confirm_password = serializers.CharField(max_length = 16)
+    confirm_password = serializers.CharField(max_length = 16, read_only = True)
     
     class Meta:
         model = User
@@ -25,3 +26,27 @@ class RegisterSerializer(serializers.ModelSerializer):
             raise ValueError('Account with the given username already exists.')
         return attrs
     
+class LoginSerializer(serializers.Serializer):
+    '''
+        This endpoint is used to log an user in.
+        Pass a valid username and password pair as request params.
+    ''' 
+    username = serializers.CharField(max_length = 100)
+    password = serializers.CharField(max_length = 50)
+
+    def validate(self, attrs):
+        '''
+            We check if an account with the passed credentials
+            exists in the User model.
+        '''
+        if User.objects.filter(username = attrs.get('username')).exists():
+            return True
+        raise User.DoesNotExist('Make sure that the user with the given credentials exists!')
+    
+    def get_user(self):
+        '''
+            In order to get the tokens, we need the
+            user instance.
+        '''
+        username = self.validated_data.get('username')
+        return User.objects.get(username = username)
