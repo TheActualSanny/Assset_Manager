@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-
+from django.contrib.auth import authenticate
 
 class RegisterSerializer(serializers.ModelSerializer):
     '''
@@ -39,7 +39,7 @@ class LoginSerializer(serializers.Serializer):
             We check if an account with the passed credentials
             exists in the User model.
         '''
-        if User.objects.filter(username = attrs.get('username')).exists():
+        if authenticate(username = attrs.get('username'), password = attrs.get('password')):
             return True
         raise User.DoesNotExist('Make sure that the user with the given credentials exists!')
     
