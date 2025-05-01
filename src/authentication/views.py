@@ -7,7 +7,6 @@ from drf_yasg.utils import swagger_auto_schema
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import AllowAny, IsAuthenticated
 
-
 class Register(APIView):
     permission_classes = [AllowAny]
 
@@ -53,4 +52,19 @@ class Logout(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        pass
+        try:
+            refresh_token = request.data.get('refresh_token')
+            token = RefreshToken(token = refresh_token)
+            token.blacklist()
+
+            return Response({
+                'message' : 'Successfully logged out!'
+            }, 
+            status = status.HTTP_205_RESET_CONTENT)
+        except:
+            return Response({
+                'message' : 'Pass a correct refresh token!'
+            }, 
+            status = status.HTTP_400_BAD_REQUEST)
+        
+        

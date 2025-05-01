@@ -6,15 +6,19 @@ from rest_framework.permissions import AllowAny
 
 api_endpoint = 'api/v1/{endpoint}'
 
+
+<<<<<<< Updated upstream
+=======
 schema = get_schema_view(
     openapi.Info(
-        title = 'asset_manager',
+        title = 'Asset Manager DOCS',
         default_version = 'v1.0.0',
         description = 'An API which lets client agencies manage their assets.'
     ),
     permission_classes = (AllowAny,)
 )
 
+>>>>>>> Stashed changes
 urlpatterns = [
     path('', schema.with_ui(), name = 'swagger-docs'),
     path('admin/', admin.site.urls),
