@@ -7,7 +7,6 @@ from drf_yasg.utils import swagger_auto_schema
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import AllowAny, IsAuthenticated
 
-
 class Register(APIView):
     permission_classes = [AllowAny]
 
