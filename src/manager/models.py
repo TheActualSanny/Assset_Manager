@@ -5,7 +5,7 @@ class Agency(models.Model):
         This will simply store the agencies. The associated projects will
         be stored in a seperate table.
     '''
-    model_name = models.CharField(max_length = 50, null = False,
+    agency_name = models.CharField(max_length = 50, null = False,
                                   blank = False, primary_key = True)
     
 class Project(models.Model):
