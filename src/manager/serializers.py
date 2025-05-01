@@ -18,14 +18,10 @@ class AgencySerializer(serializers.ModelSerializer):
         '''
 
         passed_agency_name = attrs.get('agency_name')
-        if not issubclass(type(passed_agency_name), str):
-            try:
-                attrs['agency_name'] = str(passed_agency_name)
-            except ValueError as ex:
-                raise ex('Make sure to pass a valid type!')
             
         if Agency.objects.filter(agency_name = passed_agency_name).exists():
             raise ValueError(f'Agency {passed_agency_name} already exists!')
+        
         return attrs
     
 class ProjectSerializer(serializers.ModelSerializer):
@@ -38,4 +34,12 @@ class ProjectSerializer(serializers.ModelSerializer):
             Will check if an agency and the respective project
             already exist. If they do, it will raise a ValueError. 
         '''
-        return super().validate(attrs)
+        passed_agency_name = attrs.get('agency_name')
+        passed_project_name = attrs.get('project_name')
+                            
+        if any((Agency.objects.filter(agency_name = passed_agency_name).exists(),
+               Project.objects.filter(project_name = passed_project_name).exists())):
+            raise ValueError('Record/s with the passed names already exist!')
+
+        return attrs
+        
