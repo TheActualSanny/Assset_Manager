@@ -1,12 +1,23 @@
 from . import serializers
 from rest_framework import status
+from .models import Project, Agency
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from drf_yasg.utils import swagger_auto_schema
+from rest_framework.generics import GenericAPIView
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from rest_framework.mixins import DestroyModelMixin
+from rest_framework.mixins import DestroyModelMixin, ListModelMixin
 
-class CreateAgency(APIView):
+class ListAgency(GenericAPIView, ListModelMixin):
+    queryset = Agency.objects.all()
+    serializer_class = serializers.AgencySerializer
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        return self.list(request, *args, **kwargs)
+
+class DetailedAgencyView(GenericAPIView, DestroyModelMixin):
+    queryset = Agency.objects.all()
     permission_classes = [IsAuthenticated]
 
     def post(self, request, agency_name: str):
@@ -19,7 +30,19 @@ class CreateAgency(APIView):
             status = status.HTTP_201_CREATED)
         return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
         
-class CreateProject(APIView, DestroyModelMixin):
+    def delete(self, request, *args, **kwargs):
+       return self.destroy(request, *args, **kwargs)
+
+class ListProjects(GenericAPIView, ListModelMixin):
+    queryset = Project.objects.all()
+    serializer_class = serializers.ProjectSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        return self.list(request, *args, **kwargs)
+
+class DetailedProjectView(GenericAPIView, DestroyModelMixin):
+    queryset = Project.objects.all()
     permission_classes = [IsAuthenticated]
 
     def post(self, request, agency_name: str, project_name: str):
@@ -34,4 +57,4 @@ class CreateProject(APIView, DestroyModelMixin):
         return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
     
     def delete(self, request, *args, **kwargs):
-        self.destroy(request, *args, **kwargs)
+        return self.destroy(request, *args, **kwargs)
