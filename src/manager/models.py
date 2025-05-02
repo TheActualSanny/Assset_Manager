@@ -7,6 +7,11 @@ class Agency(models.Model):
     '''
     agency_name = models.CharField(max_length = 50, null = False,
                                   blank = False, primary_key = True)
+    def __str__(self):
+        '''
+            Used in response messages.
+        '''
+        return self.agency_name
     
 class Project(models.Model):
     '''
