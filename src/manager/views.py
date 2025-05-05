@@ -27,6 +27,7 @@ class ListAgency(GenericAPIView, ListModelMixin):
 class DetailedAgencyView(GenericAPIView, DestroyModelMixin):
     queryset = Agency.objects.all()
     permission_classes = [IsAuthenticated]
+    serializer_class = serializers.AgencySerializer
 
     def post(self, request, agency_name: str):
         serializer = serializers.AgencySerializer(data = {'agency_name' : agency_name})
@@ -52,6 +53,7 @@ class ListProjects(GenericAPIView, ListModelMixin):
 class DetailedProjectView(GenericAPIView, DestroyModelMixin):
     queryset = Project.objects.all()
     permission_classes = [IsAuthenticated]
+    serializer_class = serializers.ProjectSerializer
 
     def post(self, request, agency_name: str, project_name: str):
         serializer = serializers.ProjectSerializer(data = {'associated_agency' :  agency_name,
@@ -81,5 +83,30 @@ class AssetView(APIView):
         resource_name = minio_manager._insert_resource(asset_id = curr_id, rsrc = asset,
                                                        content_type = asset_type)
         mongo_manager._insert_resource(agency_name = agency_name, project_name = project_name, 
-                                       resource_name = resource_name, collection_name = asset_type)
+                                       asset_name = resource_name, collection_name = asset_type)
         return Response({'message' : 'Data successfully loaded!'})
+    
+
+class AssetViewDetailed(APIView):
+    permission_classes = [IsAuthenticated]
+    parser_classes = [MultiPartParser]
+    @swagger_auto_schema(request_body = serializers.DetailedAsssetSerializer)
+    def delete(self, request, agency_name: str, project_name: str, asset_name: str):
+        serializer = serializers.DetailedAsssetSerializer(data = request.data)
+        serializer.is_valid()
+        content_type = serializer.validated_data.get('asset_type')
+        print(content_type)
+        resource_name = mongo_manager._delete_resource(collection_name = content_type, asset_name = asset_name,
+                                                    project_name = project_name, agency_name = agency_name)
+        
+        minio_manager._delete_resource(content_type = content_type, asset_name = resource_name)
+        return Response({'message' : 'Successfully deleted the resource!'})
+    
+
+
+class GetAssetView(APIView):
+    permissison_classes = [IsAuthenticated]
+    
+    def get(self, request, agency_name: str, project_name: str, asset_name: str, asset_type: str):
+        url = minio_manager._get_resource(content_type = asset_type, asset_name = asset_name)
+        return Response({'url' : url})
