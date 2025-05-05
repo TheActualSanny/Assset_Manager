@@ -43,3 +43,10 @@ class ProjectSerializer(serializers.ModelSerializer):
 
         return attrs
         
+
+class AssetSerializer(serializers.Serializer):
+    asset = serializers.FileField()
+    asset_type = serializers.ChoiceField(choices = ('video', 'image', 'voice'))
+    
+    def validate(self, attrs):
+        return attrs

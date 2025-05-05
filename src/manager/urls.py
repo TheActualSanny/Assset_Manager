@@ -9,5 +9,7 @@ urlpatterns = [
     path('project/',
          views.ListProjects.as_view(), name = 'projects-endpoint'),
     path('project/<str:agency_name>/<str:pk>/', 
-         views.DetailedProjectView.as_view(), name = 'project-endpoint')
+         views.DetailedProjectView.as_view(), name = 'project-endpoint'),
+    path('asset/<str:agency_name>/<str:project_name>/',
+         views.AssetView.as_view(), name = 'asset-endpoint')
 ]
