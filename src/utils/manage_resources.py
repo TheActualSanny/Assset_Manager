@@ -52,10 +52,22 @@ class ManageMinio:
             If a bucket for the passed content type doesnt exist,
             this method will create it.
         '''
-        print(asset_bucket)
         if not self.__client.bucket_exists(bucket_name = asset_bucket):
-            
             self.__client.make_bucket(bucket_name = asset_bucket)
+
+    def _delete_resource(self, content_type: str, asset_name: str):
+        '''
+            Deletes a given asset from the bucket.
+        '''
+        self.__client.remove_object(bucket_name = content_type, object_name = asset_name)
+
+    def _get_resource(self, asset_name: str, content_type: str) -> str:
+        '''
+            Returns an URL so that the client
+            can access the resource.
+        '''
+        return self.__client.presigned_get_object(bucket_name = content_type, 
+                                                  object_name = asset_name)
 
     def _resource_exists(self, blob_name: str) -> bool:
         '''
