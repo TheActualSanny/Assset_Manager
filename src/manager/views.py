@@ -6,7 +6,7 @@ from rest_framework.response import Response
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.generics import GenericAPIView
 from django.core.cache import cache
-from utils.manage_incrementing import manage_incr
+from utils.util_methods import manage_incr
 from utils.manage_resources import ManageMinio
 from utils.manage_mongo import MongoManager
 from rest_framework.parsers import MultiPartParser
@@ -90,15 +90,14 @@ class AssetView(APIView):
 class AssetViewDetailed(APIView):
     permission_classes = [IsAuthenticated]
     parser_classes = [MultiPartParser]
+
     @swagger_auto_schema(request_body = serializers.DetailedAsssetSerializer)
     def delete(self, request, agency_name: str, project_name: str, asset_name: str):
         serializer = serializers.DetailedAsssetSerializer(data = request.data)
         serializer.is_valid()
         content_type = serializer.validated_data.get('asset_type')
-        print(content_type)
         resource_name = mongo_manager._delete_resource(collection_name = content_type, asset_name = asset_name,
                                                     project_name = project_name, agency_name = agency_name)
-        
         minio_manager._delete_resource(content_type = content_type, asset_name = resource_name)
         return Response({'message' : 'Successfully deleted the resource!'})
     
@@ -108,5 +107,7 @@ class GetAssetView(APIView):
     permissison_classes = [IsAuthenticated]
     
     def get(self, request, agency_name: str, project_name: str, asset_name: str, asset_type: str):
-        url = minio_manager._get_resource(content_type = asset_type, asset_name = asset_name)
+        finalized_asset_name = mongo_manager._get_resource(asset_type = asset_type, agency_name = agency_name,
+                                                           project_name = project_name, asset_name = asset_name)
+        url = minio_manager._get_resource(content_type = asset_type, asset_name = finalized_asset_name)
         return Response({'url' : url})
