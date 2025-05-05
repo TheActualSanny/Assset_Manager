@@ -23,7 +23,8 @@ class MongoManager:
             host = os.getenv('MONGO_HOST'),
             port = int(os.getenv('MONGO_PORT')),
             username = os.getenv('MONGO_USER'),
-            password = os.getenv('MONGO_PASS')
+            password = os.getenv('MONGO_PASS'),
+            authSource = 'Assets'
         )
 
     def _create_collection(self, collection_name: str):
@@ -31,12 +32,12 @@ class MongoManager:
             This will be called on every asset type
             in the asset view request.
             In order to avoid checking whether or not the given collection
-            already exists directly inside the , we check 
+            already exists directly inside 
         '''
         return self.__client['assets'][collection_name]
 
     def _insert_resource(self, agency_name: str, project_name: str,
-                         resource_id: int, collection_name: str) -> None:
+                         resource_name: str, collection_name: str) -> None:
         '''
             After the asset was inserted in the minio, a 
             resource will be inserted into the respective collection
@@ -44,6 +45,6 @@ class MongoManager:
         '''
         col = self._create_collection(collection_name)
         finalized_resource = {'agency' : agency_name, 'project' : project_name,
-                              'resource_id' : resource_id}
+                              'resource_id' : resource_name}
         col.insert_one(document = finalized_resource)
     

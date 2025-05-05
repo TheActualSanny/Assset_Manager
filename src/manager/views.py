@@ -8,11 +8,13 @@ from rest_framework.generics import GenericAPIView
 from django.core.cache import cache
 from utils.manage_incrementing import manage_incr
 from utils.manage_resources import ManageMinio
+from utils.manage_mongo import MongoManager
 from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.mixins import DestroyModelMixin, ListModelMixin
 
 minio_manager = ManageMinio()
+mongo_manager = MongoManager()
 
 class ListAgency(GenericAPIView, ListModelMixin):
     queryset = Agency.objects.all()
@@ -76,6 +78,8 @@ class AssetView(APIView):
         serializer.is_valid()
         asset = serializer.validated_data.get('asset')
         asset_type = serializer.validated_data.get('asset_type')
-        minio_manager._insert_resource(asset_id = curr_id, rsrc = asset,
-                                       content_type = asset_type)
+        resource_name = minio_manager._insert_resource(asset_id = curr_id, rsrc = asset,
+                                                       content_type = asset_type)
+        mongo_manager._insert_resource(agency_name = agency_name, project_name = project_name, 
+                                       resource_name = resource_name, collection_name = asset_type)
         return Response({'message' : 'Data successfully loaded!'})

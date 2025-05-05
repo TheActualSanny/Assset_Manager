@@ -45,6 +45,7 @@ class ManageMinio:
         self.__client.put_object(bucket_name = content_type, object_name = finalized_name,
                                  data = file_like, 
                                  length = len(asset_data))
+        return finalized_name
 
     def _manage_buckets(self, asset_bucket: str):
         '''
