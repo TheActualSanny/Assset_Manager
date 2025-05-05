@@ -3,7 +3,7 @@ import pymongo
 from pymongo.collection import Collection
 from typing import Tuple
 from dotenv import load_dotenv
-import redis.client
+from .util_methods import formatted_title
 
 load_dotenv()
 
@@ -48,8 +48,10 @@ class MongoManager:
             so that we can do the lookup in Minio.
         '''
         data = self._access_resource(collection_name, asset_name, project_name, agency_name)
-        deleted_inst = data[0].find_one_and_delete(filter = data[1])
-        return deleted_inst.get('resource_id')
+        for record in data[0].find():
+            resource_title = record.get('resource_id')
+            if formatted_title(resource_title) == asset_name:
+               return data[0].find_one_and_delete(filter = record).get('resource_id')
 
     def _create_collection(self, collection_name: str) -> Collection:
         '''
@@ -69,4 +71,20 @@ class MongoManager:
         '''
         data = self._access_resource(collection_name, asset_name, project_name, agency_name)
         data[0].insert_one(document = data[1])
+    
+    def _get_resource(self, asset_type: str, agency_name: str, 
+                      project_name: str, asset_name: str) -> str:
+        '''
+            Finds a requested user in the respective 
+            collection.
+
+        '''
+        data = self._access_resource(collection_name = asset_type, asset_name = asset_name,
+                                     project_name = project_name, agency_name = agency_name)
+        
+        for record in data[0].find({'agency' : agency_name, 'project' : project_name}):
+            asset_id = record.get('resource_id')
+            if formatted_title(asset_id) == asset_name:
+                print(asset_id)
+                return asset_id
         
