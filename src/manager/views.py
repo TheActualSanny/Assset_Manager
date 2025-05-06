@@ -27,10 +27,9 @@ class ListAgency(GenericAPIView, ListModelMixin):
 class DetailedAgencyView(GenericAPIView, DestroyModelMixin):
     queryset = Agency.objects.all()
     permission_classes = [IsAuthenticated]
-    serializer_class = serializers.AgencySerializer
 
-    def post(self, request, agency_name: str):
-        serializer = serializers.AgencySerializer(data = {'agency_name' : agency_name})
+    def post(self, request, pk: str):
+        serializer = serializers.AgencySerializer(data = {'agency_name' : pk})
         if serializer.is_valid():
             serializer.save()
             return Response({
@@ -53,11 +52,10 @@ class ListProjects(GenericAPIView, ListModelMixin):
 class DetailedProjectView(GenericAPIView, DestroyModelMixin):
     queryset = Project.objects.all()
     permission_classes = [IsAuthenticated]
-    serializer_class = serializers.ProjectSerializer
 
-    def post(self, request, agency_name: str, project_name: str):
+    def post(self, request, agency_name: str, pk: str):
         serializer = serializers.ProjectSerializer(data = {'associated_agency' :  agency_name,
-                                                           'project_name' : project_name})
+                                                           'project_name' : pk})
         if serializer.is_valid():
             serializer.save()
             return Response({
@@ -101,7 +99,6 @@ class AssetViewDetailed(APIView):
         minio_manager._delete_resource(content_type = content_type, asset_name = resource_name)
         return Response({'message' : 'Successfully deleted the resource!'})
     
-
 
 class GetAssetView(APIView):
     permissison_classes = [IsAuthenticated]
