@@ -3,7 +3,6 @@ import pymongo
 from pymongo.collection import Collection
 from typing import Tuple
 from dotenv import load_dotenv
-from .util_methods import formatted_title
 
 load_dotenv()
 
@@ -25,7 +24,8 @@ class MongoManager:
             host = os.getenv('MONGO_HOST'),
             port = int(os.getenv('MONGO_PORT')),
             username = os.getenv('MONGO_USER'),
-            password = os.getenv('MONGO_PASS')
+            password = os.getenv('MONGO_PASS'),
+            authSource = 'Assets'
         )
 
     def _access_resource(self, collection_name: str, asset_name: str,
@@ -49,7 +49,7 @@ class MongoManager:
         data = self._access_resource(collection_name, asset_name, project_name, agency_name)
         for record in data[0].find():
             resource_title = record.get('resource_id')
-            if formatted_title(resource_title) == asset_name:
+            if MongoManager._formatted_title(resource_title) == asset_name:
                return data[0].find_one_and_delete(filter = record).get('resource_id')
 
     def _create_collection(self, collection_name: str) -> Collection:
@@ -83,7 +83,22 @@ class MongoManager:
         
         for record in data[0].find({'agency' : agency_name, 'project' : project_name}):
             asset_id = record.get('resource_id')
-            if formatted_title(asset_id) == asset_name:
+            if MongoManager._formatted_title(asset_id) == asset_name:
                 print(asset_id)
                 return asset_id
+    def _get_records_project(self, project_name: str) -> Tuple[Collection, Tuple[Collection]]:
+        '''
+            Must make sure that it doesn't create a new collection.
+        '''
+        collections = self.__client['assets'].list_collection_names()
         
+        return collections
+    
+    @staticmethod
+    def _formatted_title(file_name: str) -> str:
+        '''
+            In manager classes' methods where we
+            do lookups for certain assets, this method will be
+            called to compare the actual names instead of blob names.
+        '''
+        return file_name.split('_')[1]

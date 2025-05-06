@@ -1,4 +1,6 @@
 from django.core.cache import cache
+from .manage_mongo import MongoManager
+from .manage_resources import ManageMinio
 
 def manage_incr() -> int:
     '''
@@ -12,12 +14,18 @@ def manage_incr() -> int:
     else:
         cache.set('id', str(int(val) + 1))
         return val
-    
-def formatted_title(file_name: str) -> str:
-    '''
-        In managaer classes' methods where we
-        do lookups for certain assets, this method will be
-        called to compare the actual names instead of blob names.
-    '''
-    return file_name.split('_')[1]
 
+
+def delete_project_data(project_name: str, mongo_mngr: MongoManager, 
+                        minio_mngr: ManageMinio) -> None:
+    '''
+        We pass both managers and a project name as 
+        arguments, and it deletes all records associated with a given project.
+    '''
+    collections = mongo_mngr._get_records_project(project_name = project_name)
+    for collection_name in collections:
+        records = mongo_mngr._create_collection(collection_name)
+        for record in records.find({'project' : project_name}):
+            records.find_one_and_delete({'_id' : record['_id']})
+            minio_mngr._delete_resource(content_type = collection_name,
+                                        asset_name = record['resource_id'])

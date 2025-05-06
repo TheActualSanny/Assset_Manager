@@ -6,7 +6,7 @@ from rest_framework.response import Response
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.generics import GenericAPIView
 from django.core.cache import cache
-from utils.util_methods import manage_incr
+from utils.util_methods import manage_incr, delete_project_data
 from utils.manage_resources import ManageMinio
 from utils.manage_mongo import MongoManager
 from rest_framework.parsers import MultiPartParser
@@ -65,6 +65,9 @@ class DetailedProjectView(GenericAPIView, DestroyModelMixin):
         return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
     
     def delete(self, request, *args, **kwargs):
+        delete_project_data(project_name = kwargs.get('pk'), mongo_mngr = mongo_manager,
+                            minio_mngr = minio_manager)
+        
         return self.destroy(request, *args, **kwargs)
     
 class AssetView(APIView):
