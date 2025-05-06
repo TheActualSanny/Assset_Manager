@@ -37,7 +37,7 @@ def delete_agency_data(agency_name: str, mongo_mngr: MongoManager,
         Just like delete_project_data, this function
         deletes all of the assets associated with a given agency.
     '''
-    projects = Project.objects.prefetch_related('associated_agency').all()
+    projects = Project.objects.prefetch_related('associated_agency').filter(associated_agency__pk = agency_name)
     for project in projects:
         delete_project_data(project_name = project.project_name, mongo_mngr = mongo_mngr,
                             minio_mngr = minio_mngr)
