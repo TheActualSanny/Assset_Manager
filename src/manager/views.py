@@ -75,7 +75,8 @@ class AssetView(APIView):
     def post(self, request, agency_name: str, project_name: str):
         serializer = serializers.AssetSerializer(data = request.data)
         curr_id = manage_incr()
-        serializer.is_valid()
+        if not serializer.is_valid():
+            return Response(serializer.errors)
         asset = serializer.validated_data.get('asset')
         asset_type = serializer.validated_data.get('asset_type')
         resource_name = minio_manager._insert_resource(asset_id = curr_id, rsrc = asset,
