@@ -1,7 +1,7 @@
 import os
 import pymongo
 from pymongo.collection import Collection
-from typing import Tuple
+from typing import Tuple, List
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -86,13 +86,12 @@ class MongoManager:
             if MongoManager._formatted_title(asset_id) == asset_name:
                 print(asset_id)
                 return asset_id
-    def _get_records_project(self, project_name: str) -> Tuple[Collection, Tuple[Collection]]:
+    def _get_records_project(self) -> List[str]:
         '''
             Must make sure that it doesn't create a new collection.
         '''
-        collections = self.__client['assets'].list_collection_names()
         
-        return collections
+        return self.__client['assets'].list_collection_names()
     
     @staticmethod
     def _formatted_title(file_name: str) -> str:
