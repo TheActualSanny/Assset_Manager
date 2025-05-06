@@ -16,7 +16,7 @@ class ManageMinio:
         '''
             The client instance is created here.
         '''
-        self.__client = Minio(endpoint = 'localhost:9000', access_key = os.getenv('ACCESS_KEY'),
+        self.__client = Minio(endpoint = f'{os.getenv('MINIO_HOST')}:9000', access_key = os.getenv('ACCESS_KEY'),
                               secret_key = os.getenv('SECRET_KEY'), secure = False)
         self._resource_name_format = '{id}_{name}_blob'
 

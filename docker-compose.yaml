@@ -2,6 +2,10 @@ services:
       api:
         depends_on: 
         - postgre
+        - redis
+        - mongo
+        - minio
+        
         ports: 
         - "8000:8000"
         build:
@@ -21,4 +25,43 @@ services:
 
         env_file:
         - .env
+      redis:
+       image: redis
+       ports:
+       - '6379:6379'
+       volumes:
+       - cache:/data
+
+      mongo:
+       image: mongo:6
+       ports:
+       - '27017:27017'
+       environment:
+       - MONGODB_INITDB_ROOT_USERNAME=${MONGO_USER}
+       - MONGODB_INITDB_ROOT_PASSWORD=${MONGO_PASS} 
+       volumes:
+       - ./mongo-data:/data/db/
+
+      minio:
+       image: minio/minio
+       ports:
+       - "9000:9000"
+       - "9001:9001"
+
+       environment:
+        MINIO_ROOT_USER: ${ACCESS_KEY}
+        MINIO_ROOT_PASSWORD: ${SECRET_KEY}
+       
+       env_file:
+       - .env
+       
+       volumes:
+       - ./minio-data:/data
+       
+       command: server /data --console-address ":9001"
+       
+
+volumes:
+  cache:
+    driver: local
 
