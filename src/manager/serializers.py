@@ -49,7 +49,16 @@ class AssetSerializer(serializers.Serializer):
     asset_type = serializers.ChoiceField(choices = ('video', 'image', 'voice', 'music', 'logo'))
     
     def validate(self, attrs):
-        return attrs
+        '''
+                We check if the uploaded file's content type
+                is correct and it matches the chosen field.
+        '''
+        asset = attrs.get('asset')         
+        if asset.content_type.split('/')[0] == attrs.get('asset_type'):
+            return attrs
+        else: 
+            raise serializers.ValidationError('Make sure to pass a correct content type!')
+
     
 class DetailedAsssetSerializer(serializers.Serializer):
     asset_type = serializers.ChoiceField(choices = ('video', 'image', 'voice', 'music', 'logo'))
