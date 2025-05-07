@@ -53,6 +53,12 @@ class AssetSerializer(serializers.Serializer):
                 We check if the uploaded file's content type
                 is correct and it matches the chosen field.
         '''
+        agency, project = self.context.get('agency'), self.context.get('project')
+        if not all((Agency.objects.filter(agency_name = agency).exists(), 
+                   Project.objects.prefetch_related('associated_agency').filter(associated_agency__pk = agency, 
+                                                                                project_name = project).exists())):
+            raise serializers.ValidationError('Make sure to pass correct a agency/project!')
+        
         asset = attrs.get('asset')         
         if asset.content_type.split('/')[0] == attrs.get('asset_type'):
             return attrs

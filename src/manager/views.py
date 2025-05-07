@@ -78,7 +78,9 @@ class AssetView(APIView):
 
     @swagger_auto_schema(request_body = serializers.AssetSerializer)
     def post(self, request, agency_name: str, project_name: str):
-        serializer = serializers.AssetSerializer(data = request.data)
+        serializer = serializers.AssetSerializer(data = request.data,
+                                                 context = {'agency' : agency_name, 'project' : project_name})
+        
         curr_id = manage_incr()
         if not serializer.is_valid():
             return Response(serializer.errors)
