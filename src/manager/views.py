@@ -84,8 +84,7 @@ class AssetView(APIView):
             return Response(serializer.errors)
         asset = serializer.validated_data.get('asset')
         asset_type = serializer.validated_data.get('asset_type')
-        resource_name = minio_manager._insert_resource(asset_id = curr_id, rsrc = asset,
-                                                       content_type = asset_type)
+        resource_name = minio_manager._insert_resource(asset_id = curr_id, rsrc = asset)
         mongo_manager._insert_resource(agency_name = agency_name, project_name = project_name, 
                                        asset_name = resource_name, collection_name = asset_type)
         return Response({'message' : 'Data successfully loaded!'})

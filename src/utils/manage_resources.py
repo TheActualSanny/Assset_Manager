@@ -18,17 +18,18 @@ class ManageMinio:
         '''
         self.__client = Minio(endpoint = f'{os.getenv('MINIO_HOST')}:9000', access_key = os.getenv('ACCESS_KEY'),
                               secret_key = os.getenv('SECRET_KEY'), secure = False)
-        self._resource_name_format = '{id}_{name}_blob'
+        self._resource_name_format = '{id}_{name}_blob.{ext}'
 
-    def _generate_name(self, asset_id: int, file_name: str) -> str:
+    def _generate_name(self, asset_id: int, file_name: str, ext: str) -> str:
         '''
             Will generate a resource name based on the name of
             the file that the user passed. For this,
             the format attribute will be used.
         '''
-        return self._resource_name_format.format(id = asset_id, name = file_name)
+        return self._resource_name_format.format(id = asset_id, name = file_name,
+                                                 ext = ext)
 
-    def _insert_resource(self, asset_id: int, rsrc: str, content_type: str):
+    def _insert_resource(self, asset_id: int, rsrc: str):
         '''
             The stream bytes that the
             user sends in the request
@@ -37,12 +38,15 @@ class ManageMinio:
             rsrc: The stream temporary file that contains the main data.
         '''
         asset_name = rsrc.name.split('.')[0]
-        finalized_name = self._generate_name(asset_id = asset_id, file_name = asset_name)
+        split_type = rsrc.content_type.split('/')
+        asset_extension, content_type = split_type[1], split_type[0]
+        finalized_name = self._generate_name(asset_id = asset_id, file_name = asset_name,
+                                             ext = asset_extension)
         asset_data = rsrc.read()
         file_like = io.BytesIO(asset_data)
 
         self._manage_buckets(content_type)
-        self.__client.put_object(bucket_name = content_type, object_name = finalized_name,
+        self.__client.put_object(bucket_name = split_type[0], object_name = finalized_name,
                                  data = file_like, 
                                  length = len(asset_data))
         return finalized_name
