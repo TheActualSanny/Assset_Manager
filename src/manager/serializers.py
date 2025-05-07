@@ -22,6 +22,7 @@ class AgencySerializer(serializers.ModelSerializer):
         Used to create Agency records.
         Will typecast the names, if possible of course.
     '''
+    agency_name = serializers.CharField(validators = [])
     class Meta:
         model = Agency
         fields = '__all__'
@@ -34,11 +35,17 @@ class AgencySerializer(serializers.ModelSerializer):
         '''
 
         passed_agency_name = attrs.get('agency_name')
-            
+        request_type = self.context.get('request_type')
+        print(request_type)
         if Agency.objects.filter(agency_name = passed_agency_name).exists():
-            raise ValueError(f'Agency {passed_agency_name} already exists!')
-        
-        return attrs
+            if request_type == 'GET':
+                return attrs
+            else:
+                raise serializers.ValidationError(f'Agency {passed_agency_name} already exists!')
+        elif request_type == 'POST':
+            return attrs
+        else:
+            raise serializers.ValidationError(f'Agency {passed_agency_name} doesnt exist!')
     
 class ProjectSerializer(serializers.ModelSerializer):
     class Meta:

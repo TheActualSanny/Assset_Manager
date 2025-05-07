@@ -86,7 +86,7 @@ class MongoManager:
             if MongoManager._formatted_title(asset_id) == asset_name:
                 print(asset_id)
                 return asset_id
-    def _get_records_project(self) -> List[str]:
+    def _get_records(self) -> List[str]:
         '''
             Must make sure that it doesn't create a new collection.
         '''

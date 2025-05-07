@@ -23,7 +23,7 @@ def delete_project_data(project_name: str, mongo_mngr: MongoManager,
         We pass both managers and a project name as 
         arguments, and it deletes all records associated with a given project.
     '''
-    collections = mongo_mngr._get_records_project()
+    collections = mongo_mngr._get_records()
     for collection_name in collections:
         records = mongo_mngr._create_collection(collection_name)
         for record in records.find({'project' : project_name}):
@@ -41,3 +41,19 @@ def delete_agency_data(agency_name: str, mongo_mngr: MongoManager,
     for project in projects:
         delete_project_data(project_name = project.project_name, mongo_mngr = mongo_mngr,
                             minio_mngr = minio_mngr)
+        
+def get_agency_data(agency_name: str, mongo_mngr: MongoManager,
+                    minio_mngr: ManageMinio) -> dict:
+    '''
+       Method which will return all of the assets associated with a given agency.
+    '''
+    response_dict = dict()
+    data = mongo_mngr._get_records()
+    for collection in data:
+        response_dict[collection] = dict()
+        assets = mongo_mngr._create_collection(collection)
+        for asset in assets.find({'agency' : agency_name}):
+            resource_name = asset['resource_id']
+            response_dict[collection][f'{resource_name}'] = minio_mngr._get_resource(asset_name = resource_name,
+                                                                         content_type = collection)
+    return response_dict
