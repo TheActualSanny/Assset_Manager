@@ -1,6 +1,22 @@
 from .models import Agency, Project
 from rest_framework import serializers
 
+
+class ValidationMixin:
+    '''
+        Considering that both asset serializers will
+        need to validate the Agency and Project records,
+        that logic will be written here.
+    '''
+    def validate(self, attrs):
+        agency, project = self.context.get('agency'), self.context.get('project')
+
+        if not all((Agency.objects.filter(agency_name = agency).exists(), 
+                   Project.objects.prefetch_related('associated_agency').filter(associated_agency__pk = agency, 
+                                                                                project_name = project).exists())):
+            return 
+        return True
+
 class AgencySerializer(serializers.ModelSerializer):
     '''
         Used to create Agency records.
@@ -44,7 +60,7 @@ class ProjectSerializer(serializers.ModelSerializer):
         return attrs
         
 
-class AssetSerializer(serializers.Serializer):
+class AssetSerializer(ValidationMixin, serializers.Serializer):
     asset = serializers.FileField()
     asset_type = serializers.ChoiceField(choices = ('video', 'image', 'voice', 'music', 'logo'))
     
@@ -53,6 +69,9 @@ class AssetSerializer(serializers.Serializer):
                 We check if the uploaded file's content type
                 is correct and it matches the chosen field.
         '''
+        result = super().validate(attrs)
+        if not result:
+            raise serializers.ValidationError('Make sure to pass correct a agency/project!')
         asset = attrs.get('asset')         
         if asset.content_type.split('/')[0] == attrs.get('asset_type'):
             return attrs
@@ -60,8 +79,11 @@ class AssetSerializer(serializers.Serializer):
             raise serializers.ValidationError('Make sure to pass a correct content type!')
 
     
-class DetailedAsssetSerializer(serializers.Serializer):
+class DetailedAsssetSerializer(ValidationMixin, serializers.Serializer):
     asset_type = serializers.ChoiceField(choices = ('video', 'image', 'voice', 'music', 'logo'))
 
     def validate(self, attrs):
+        result = super().validate(attrs)
+        if not result:
+            raise serializers.ValidationError('Make sure to pass correct a agency/project!')
         return attrs
