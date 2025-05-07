@@ -99,8 +99,10 @@ class AssetViewDetailed(APIView):
 
     @swagger_auto_schema(request_body = serializers.DetailedAsssetSerializer)
     def delete(self, request, agency_name: str, project_name: str, asset_name: str):
-        serializer = serializers.DetailedAsssetSerializer(data = request.data)
-        serializer.is_valid()
+        serializer = serializers.DetailedAsssetSerializer(data = request.data, 
+                                                          context = {'project' : project_name, 'agency' : agency_name})
+        if not serializer.is_valid():
+            return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
         content_type = serializer.validated_data.get('asset_type')
         resource_name = mongo_manager._delete_resource(collection_name = content_type, asset_name = asset_name,
                                                     project_name = project_name, agency_name = agency_name)
