@@ -42,33 +42,21 @@ def delete_agency_data(agency_name: str, mongo_mngr: MongoManager,
         delete_project_data(project_name = project.project_name, mongo_mngr = mongo_mngr,
                             minio_mngr = minio_mngr)
         
-def get_agency_data(agency_name: str, mongo_mngr: MongoManager,
-                    minio_mngr: ManageMinio) -> dict:
-    '''
-       Method which will return all of the assets associated with a given agency.
-    '''
-    response_dict = dict()
-    data = mongo_mngr._get_records()
-    for collection in data:
-        response_dict[collection] = dict()
-        assets = mongo_mngr._create_collection(collection)
-        for asset in assets.find({'agency' : agency_name}):
-            resource_name = asset['resource_id']
-            response_dict[collection][f'{resource_name}'] = minio_mngr._get_resource(asset_name = resource_name,
-                                                                         content_type = collection)
-    return response_dict
-
-def get_project_data(project_name: str, agency_name: str, 
-                     mongo_mngr: MongoManager, minio_mngr: ManageMinio) -> dict:
+def get_data(agency_name: str, lookup_type: str, 
+             mongo_mngr: MongoManager, minio_mngr: ManageMinio, project_name = None) -> dict:
     '''
         Gets assets associated with the passed project.
     '''
     response_dict = dict()
     data = mongo_mngr._get_records()
+    if lookup_type == 'project':
+        find_condition = {'project' : project_name, 'agency' : agency_name}
+    else:
+        find_condition = {'agency' : agency_name}
     for collection in data:
         response_dict[collection] = dict()
         assets = mongo_mngr._create_collection(collection)
-        for asset in assets.find({'agency' : agency_name, 'project' : project_name}):
+        for asset in assets.find(find_condition):
             resource_name = asset['resource_id']
             response_dict[collection][f'{resource_name}'] = minio_mngr._get_resource(asset_name = resource_name,
                                                                          content_type = collection)
