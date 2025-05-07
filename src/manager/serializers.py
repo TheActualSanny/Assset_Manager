@@ -75,6 +75,12 @@ class ProjectSerializer(serializers.ModelSerializer):
             return attrs
         else:
             raise serializers.ValidationError('Project with the passed name doesnt exist!')
+    
+    def save(self, **kwargs):
+        
+        associated_agency_record = Agency.objects.get(agency_name = self.validated_data.get('associated_agency'))
+        return Project.objects.create(project_name = self.validated_data.get('project_name'),
+                                      associated_agency = associated_agency_record)
         
 class AssetSerializer(ValidationMixin, serializers.Serializer):
     asset = serializers.FileField()
