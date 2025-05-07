@@ -48,6 +48,9 @@ class AgencySerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(f'Agency {passed_agency_name} doesnt exist!')
     
 class ProjectSerializer(serializers.ModelSerializer):
+    associated_agency = serializers.CharField(validators = [])
+    project_name = serializers.CharField(validators = [])
+
     class Meta:
         model = Project
         fields = '__all__'
@@ -57,16 +60,22 @@ class ProjectSerializer(serializers.ModelSerializer):
             Will check if an agency and the respective project
             already exist. If they do, it will raise a ValueError. 
         '''
-        passed_agency_name = attrs.get('agency_name')
+        passed_agency_name = attrs.get('associated_agency')
         passed_project_name = attrs.get('project_name')
-                            
-        if any((Agency.objects.filter(agency_name = passed_agency_name).exists(),
-               Project.objects.filter(project_name = passed_project_name).exists())):
-            raise ValueError('Record/s with the passed names already exist!')
-
-        return attrs
+        request_type = self.context.get('request_type')
+        print(request_type)
+        if not Agency.objects.filter(agency_name = passed_agency_name).exists():
+            raise serializers.ValidationError('The passed agency doesnt exist!')
+        if Project.objects.filter(project_name = passed_project_name).exists():
+            if request_type == 'GET':
+                return attrs
+            else:
+                raise serializers.ValidationError('Record/s with the passed names already exist!')
+        elif request_type == 'POST':
+            return attrs
+        else:
+            raise serializers.ValidationError('Project with the passed name doesnt exist!')
         
-
 class AssetSerializer(ValidationMixin, serializers.Serializer):
     asset = serializers.FileField()
     asset_type = serializers.ChoiceField(choices = ('video', 'image', 'voice', 'music', 'logo'))

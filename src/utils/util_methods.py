@@ -57,3 +57,19 @@ def get_agency_data(agency_name: str, mongo_mngr: MongoManager,
             response_dict[collection][f'{resource_name}'] = minio_mngr._get_resource(asset_name = resource_name,
                                                                          content_type = collection)
     return response_dict
+
+def get_project_data(project_name: str, agency_name: str, 
+                     mongo_mngr: MongoManager, minio_mngr: ManageMinio) -> dict:
+    '''
+        Gets assets associated with the passed project.
+    '''
+    response_dict = dict()
+    data = mongo_mngr._get_records()
+    for collection in data:
+        response_dict[collection] = dict()
+        assets = mongo_mngr._create_collection(collection)
+        for asset in assets.find({'agency' : agency_name, 'project' : project_name}):
+            resource_name = asset['resource_id']
+            response_dict[collection][f'{resource_name}'] = minio_mngr._get_resource(asset_name = resource_name,
+                                                                         content_type = collection)
+    return response_dict

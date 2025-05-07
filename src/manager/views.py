@@ -11,7 +11,7 @@ from utils.manage_mongo import MongoManager
 from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.mixins import DestroyModelMixin, ListModelMixin
-from utils.util_methods import manage_incr, delete_project_data, delete_agency_data, get_agency_data
+from utils.util_methods import manage_incr, delete_project_data, delete_agency_data, get_agency_data, get_project_data
 
 minio_manager = ManageMinio()
 mongo_manager = MongoManager()
@@ -32,7 +32,6 @@ class DetailedAgencyView(GenericAPIView, DestroyModelMixin):
         serializer = serializers.AgencySerializer(data = {'agency_name' : pk},
                                                   context = {'request_type' : 'GET'})
         if not serializer.is_valid():
-            print('Is-Validated')
             return Response(serializer.errors, status = status.HTTP_404_NOT_FOUND)
         data = get_agency_data(agency_name = pk, mongo_mngr = mongo_manager,
                                minio_mngr = minio_manager)
@@ -68,9 +67,20 @@ class DetailedProjectView(GenericAPIView, DestroyModelMixin):
     queryset = Project.objects.all()
     permission_classes = [IsAuthenticated]
 
+    def get(self, request, agency_name: str, pk: str):
+        serializer = serializers.ProjectSerializer(data = {'associated_agency' : agency_name,
+                                                           'project_name' : pk}, 
+                                                           context = {'request_type' : 'GET'})
+        if not serializer.is_valid():
+            return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
+        data = get_project_data(project_name = pk, agency_name = agency_name, 
+                                mongo_mngr = mongo_manager, minio_mngr = minio_manager)
+        return Response(data = data, status = status.HTTP_200_OK)
+        
     def post(self, request, agency_name: str, pk: str):
         serializer = serializers.ProjectSerializer(data = {'associated_agency' :  agency_name,
-                                                           'project_name' : pk})
+                                                           'project_name' : pk}, 
+                                                           context = {'request_type' : 'POST'})
         if serializer.is_valid():
             serializer.save()
             return Response({
