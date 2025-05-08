@@ -21,9 +21,9 @@ class RegisterSerializer(serializers.ModelSerializer):
             2. An User instance with the passed username must not exist.
         '''
         if attrs.get('password') != attrs.get('confirm_password'):
-            raise ValueError('Make sure to pass the same password to confirm it!')
+            raise serializers.ValidationError('Make sure to pass the same password to confirm it!')
         if User.objects.filter(username = attrs.get('username')).exists():
-            raise ValueError('Account with the given username already exists.')
+            raise serializers.ValidationError('Account with the given username already exists.')
         return attrs
     
 class LoginSerializer(serializers.Serializer):
@@ -40,8 +40,8 @@ class LoginSerializer(serializers.Serializer):
             exists in the User model.
         '''
         if authenticate(username = attrs.get('username'), password = attrs.get('password')):
-            return attrs
-        raise User.DoesNotExist('Make sure that the user with the given credentials exists!')
+            return True
+        raise serializers.ValidationError('Make sure that the user with the given credentials exists!')
     
     def get_user(self):
         '''
