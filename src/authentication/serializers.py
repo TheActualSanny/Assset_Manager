@@ -40,7 +40,7 @@ class LoginSerializer(serializers.Serializer):
             exists in the User model.
         '''
         if authenticate(username = attrs.get('username'), password = attrs.get('password')):
-            return True
+            return attrs
         raise serializers.ValidationError('Make sure that the user with the given credentials exists!')
     
     def get_user(self):
