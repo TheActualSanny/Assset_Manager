@@ -1,5 +1,5 @@
 from celery import shared_task
-from .models import Project
+from .models import Project, Agency
 from utils.manage_mongo import MongoManager
 from utils.manage_resources import ManageMinio
 from django.core.files.uploadedfile import InMemoryUploadedFile
@@ -45,12 +45,13 @@ def delete_project_data(project_name: str) -> None:
                                         asset_name = record['resource_id'])
 
 @shared_task
-def delete_agency_data(agency_name: str, mongo_mngr: MongoManager,
-                       minio_mngr: ManageMinio) -> None:
+def delete_agency_data(agency_name: str) -> None:
     '''
         Just like delete_project_data, this function
         deletes all of the assets associated with a given agency.
     '''
     projects = Project.objects.prefetch_related('associated_agency').filter(associated_agency__pk = agency_name)
     for project in projects:
-        delete_project_data(project_name = project.project_name)
+        delete_project_data.delay(project_name = project.project_name)
+    Agency.objects.filter(agency_name = agency_name).delete()
+    

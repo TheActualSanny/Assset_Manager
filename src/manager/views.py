@@ -51,9 +51,9 @@ class DetailedAgencyView(GenericAPIView, DestroyModelMixin):
             status = status.HTTP_201_CREATED)
         return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
         
-    def delete(self, request, *args, **kwargs):
-       delete_agency_data.delay(agency_name = kwargs.get('pk'))
-       return self.destroy(request, *args, **kwargs)
+    def delete(self, request, pk: str):
+       delete_agency_data.delay(agency_name = pk)
+       return Response({'message' : 'Successfully deleted agency data!'})
 
 class ListProjects(GenericAPIView, ListModelMixin):
     queryset = Project.objects.all()
