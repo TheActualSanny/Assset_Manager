@@ -5,11 +5,20 @@ services:
         - redis
         - mongo
         - minio
-        
+        - celery
         ports: 
         - "8000:8000"
         build:
           context: .
+
+      celery:
+        depends_on:
+        - redis
+        build:
+          context: .
+        command: celery -A asset_manager worker --pool=solo -l info
+        volumes:
+        - ./celery-data:/app
 
       postgre:
         image: postgres
