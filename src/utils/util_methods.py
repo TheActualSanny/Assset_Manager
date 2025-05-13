@@ -12,10 +12,11 @@ def manage_incr() -> int:
     '''
     val = cache.get('id')
     if not val:
-        cache.set('id', '0')
+        cache.set('id', '0', timeout = None)
         return 0
     else:
-        cache.set('id', str(int(val) + 1))
+        val = int(val) + 1
+        cache.set('id', str(val))
         return val
         
 def get_data(agency_name: str, lookup_type: str, 
