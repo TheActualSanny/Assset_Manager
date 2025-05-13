@@ -59,7 +59,10 @@ class ManageMinio:
         '''
             Deletes a given asset from the bucket.
         '''
-        self.__client.remove_object(bucket_name = content_type, object_name = asset_name)
+        if asset_name:
+            self.__client.remove_object(bucket_name = content_type, object_name = asset_name)
+        else:
+            print('Doesnt exist!')
 
     def _get_resource(self, asset_name: str, content_type: str) -> str:
         '''

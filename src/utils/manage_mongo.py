@@ -47,7 +47,8 @@ class MongoManager:
             so that we can do the lookup in Minio.
         '''
         data = self._access_resource(collection_name, asset_name, project_name, agency_name)
-        for record in data[0].find():
+        data[1].pop('resource_id')
+        for record in data[0].find(data[1]):
             resource_title = record.get('resource_id')
             if MongoManager._formatted_title(resource_title) == asset_name:
                return data[0].find_one_and_delete(filter = record).get('resource_id')
@@ -84,7 +85,6 @@ class MongoManager:
         for record in data[0].find({'agency' : agency_name, 'project' : project_name}):
             asset_id = record.get('resource_id')
             if MongoManager._formatted_title(asset_id) == asset_name:
-                print(asset_id)
                 return asset_id
     def _get_records(self) -> List[str]:
         '''

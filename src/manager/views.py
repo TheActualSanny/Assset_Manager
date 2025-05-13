@@ -52,8 +52,7 @@ class DetailedAgencyView(GenericAPIView, DestroyModelMixin):
         return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
         
     def delete(self, request, *args, **kwargs):
-       delete_agency_data(agency_name = kwargs.get('pk'), mongo_mngr = mongo_manager,
-                          minio_mngr = minio_manager)
+       delete_agency_data.delay(agency_name = kwargs.get('pk'))
        return self.destroy(request, *args, **kwargs)
 
 class ListProjects(GenericAPIView, ListModelMixin):
@@ -91,9 +90,7 @@ class DetailedProjectView(GenericAPIView, DestroyModelMixin):
         return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
     
     def delete(self, request, *args, **kwargs):
-        delete_project_data(project_name = kwargs.get('pk'), mongo_mngr = mongo_manager,
-                            minio_mngr = minio_manager)
-        
+        delete_project_data.delay(project_name = kwargs.get('pk'))
         return self.destroy(request, *args, **kwargs)
     
 class AssetView(APIView):
