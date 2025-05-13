@@ -11,7 +11,9 @@ from utils.manage_mongo import MongoManager
 from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.mixins import DestroyModelMixin, ListModelMixin
-from utils.util_methods import manage_incr, delete_project_data, delete_agency_data, get_data
+from utils.util_methods import manage_incr, get_data
+from .tasks import insert_resource, delete_resource, delete_agency_data, delete_project_data
+
 minio_manager = ManageMinio()
 mongo_manager = MongoManager()
 
@@ -108,9 +110,8 @@ class AssetView(APIView):
             return Response(serializer.errors)
         asset = serializer.validated_data.get('asset')
         asset_type = serializer.validated_data.get('asset_type')
-        resource_name = minio_manager._insert_resource(asset_id = curr_id, rsrc = asset)
-        mongo_manager._insert_resource(agency_name = agency_name, project_name = project_name, 
-                                       asset_name = resource_name, collection_name = asset_type)
+        insert_resource.delay(project_name = project_name, agency_name = agency_name, asset_type = asset_type,
+                        curr_id = curr_id, asset = asset, mongo_mngr = mongo_manager, minio_mngr = minio_manager)
         return Response({'message' : 'Data successfully loaded!'})
     
 
@@ -125,9 +126,8 @@ class AssetViewDetailed(APIView):
         if not serializer.is_valid():
             return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
         content_type = serializer.validated_data.get('asset_type')
-        resource_name = mongo_manager._delete_resource(collection_name = content_type, asset_name = asset_name,
-                                                    project_name = project_name, agency_name = agency_name)
-        minio_manager._delete_resource(content_type = content_type, asset_name = resource_name)
+        delete_resource.delay(project_name = project_name, agency_name = agency_name, asset_type = content_type,
+                        asset_name = asset_name, mongo_mngr = mongo_manager, minio_mngr = minio_manager)
         return Response({'message' : 'Successfully deleted the resource!'})
     
 
