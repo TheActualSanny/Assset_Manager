@@ -1,7 +1,9 @@
+import base64
 from django.core.cache import cache
 from manager.models import Project
 from .manage_mongo import MongoManager
 from .manage_resources import ManageMinio
+from django.core.files.uploadedfile import InMemoryUploadedFile
 
 def manage_incr() -> int:
     '''
@@ -35,3 +37,22 @@ def get_data(agency_name: str, lookup_type: str,
             response_dict[collection][f'{resource_name}'] = minio_mngr._get_resource(asset_name = resource_name,
                                                                          content_type = collection)
     return response_dict
+
+def format_params(asset: InMemoryUploadedFile, asset_type: str, asset_id: int, minio_mngr: ManageMinio) -> dict:
+    '''
+        For the insertion process to work as a celery task,
+        the params that we pass must be serializable.
+        We pass a InMemoryUploadedFile type to this method (as well as other args that need formatting)
+        and we transform that data, just like we previously did in ManageMinio._insert_resource.
+    '''
+    asset_name = asset.name.split('.')[0]
+    split_type = asset.content_type.split('/')
+    asset_extension, content_type = split_type[1], split_type[0]
+    finalized_name = minio_mngr._generate_name(asset_id = asset_id, file_name = asset_name,
+                                               ext = asset_extension)
+    asset_data = asset.read()
+    asset_data_stringified = base64.b64encode(asset_data).decode('utf-8')
+
+    finalized_dict = {'finalized_name' : finalized_name, 'asset_ext' : asset_extension, 
+                      'content_type' : content_type, 'asset_data' : asset_data_stringified}
+    return finalized_dict

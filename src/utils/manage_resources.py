@@ -1,5 +1,6 @@
 import os
 import io
+import base64
 from minio import Minio
 from dotenv import load_dotenv
 from django.core.cache import cache
@@ -29,27 +30,22 @@ class ManageMinio:
         return self._resource_name_format.format(id = asset_id, name = file_name,
                                                  ext = ext)
 
-    def _insert_resource(self, asset_id: int, rsrc: str):
+    def _insert_resource(self, rsrc: str, finalized_name: str,
+                         content_type: str):
         '''
             The stream bytes that the
             user sends in the request
-            will be inserted inside a bucket,
+            will be inserted inside a bucket.
             
-            rsrc: The stream temporary file that contains the main data.
+            rsrc: The stringified file that contains the main data.
         '''
-        asset_name = rsrc.name.split('.')[0]
-        split_type = rsrc.content_type.split('/')
-        asset_extension, content_type = split_type[1], split_type[0]
-        finalized_name = self._generate_name(asset_id = asset_id, file_name = asset_name,
-                                             ext = asset_extension)
-        asset_data = rsrc.read()
+        asset_data = base64.b64decode(rsrc)
         file_like = io.BytesIO(asset_data)
 
         self._manage_buckets(content_type)
-        self.__client.put_object(bucket_name = split_type[0], object_name = finalized_name,
+        self.__client.put_object(bucket_name = content_type, object_name = finalized_name,
                                  data = file_like, 
                                  length = len(asset_data))
-        return finalized_name
 
     def _manage_buckets(self, asset_bucket: str):
         '''

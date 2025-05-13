@@ -11,7 +11,7 @@ from utils.manage_mongo import MongoManager
 from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.mixins import DestroyModelMixin, ListModelMixin
-from utils.util_methods import manage_incr, get_data
+from utils.util_methods import manage_incr, get_data, format_params
 from .tasks import insert_resource, delete_resource, delete_agency_data, delete_project_data
 
 minio_manager = ManageMinio()
@@ -110,8 +110,10 @@ class AssetView(APIView):
             return Response(serializer.errors)
         asset = serializer.validated_data.get('asset')
         asset_type = serializer.validated_data.get('asset_type')
-        insert_resource.delay(project_name = project_name, agency_name = agency_name, asset_type = asset_type,
-                        curr_id = curr_id, asset = asset, mongo_mngr = mongo_manager, minio_mngr = minio_manager)
+        formatted_params = format_params(asset = asset, asset_type = asset_type, 
+                             asset_id = curr_id, minio_mngr = minio_manager)
+        insert_resource.delay(project_name = project_name, agency_name = agency_name, asset_type = formatted_params['content_type'],
+                              asset_name = formatted_params['finalized_name'], asset_data = formatted_params['asset_data'])
         return Response({'message' : 'Data successfully loaded!'})
     
 
@@ -127,7 +129,7 @@ class AssetViewDetailed(APIView):
             return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
         content_type = serializer.validated_data.get('asset_type')
         delete_resource.delay(project_name = project_name, agency_name = agency_name, asset_type = content_type,
-                        asset_name = asset_name, mongo_mngr = mongo_manager, minio_mngr = minio_manager)
+                              asset_name = asset_name)
         return Response({'message' : 'Successfully deleted the resource!'})
     
 
