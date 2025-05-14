@@ -1,3 +1,10 @@
+import io
+import base64
+
+def b64_to_iobytes(encoded: str) -> io.BytesIO:
+    data = base64.decode(encoded)
+    return io.BytesIO(data)
+
 def formatted_title(file_name: str) -> str:
     '''
         In manager classes' methods where we
