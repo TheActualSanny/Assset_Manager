@@ -1,52 +1,63 @@
 import io
 import base64
+from typing import Tuple
 from PIL import Image, ImageFilter
-from .additional_methods import b64_to_iobytes
 
 class ImageManager:
-    def to_portrait(self, img_data: str) -> str:
+
+    @staticmethod
+    def load_base(img_data: str) -> str:
+        data = base64.b64decode(img_data)
+        return (data, io.BytesIO(data),)
+    
+    @staticmethod
+    def to_vertical(img_data: str) -> Tuple[str, str]:
         '''
             Will rotate the image for it to be in portrait (vertical) mode.
         '''
-        data = b64_to_iobytes(img_data)
-        
-        with Image.open(data) as img:
-            img.rotate(90, expand = True)
-            modified_img = img.tobytes()
-        return base64.encode(modified_img).decode('utf-8')
+        #TODO: Must pass the valid extension 
+        with Image.open(img_data) as img:
+            new_img = img.rotate(90, expand = True)
+            new_stream = io.BytesIO()
+            new_img.save(new_stream, format = 'jpeg')
+            new_stream.seek(0)
+        return base64.b64encode(new_stream.getvalue()).decode('utf-8')
 
-    def to_landscape(self, img_data: str) -> str:
+    @staticmethod
+    def to_landscape(img_data: str) -> str:
         '''
             Will rotate the image for it to be in landscape (horizontal) mode.
         '''
-        data = b64_to_iobytes(img_data)
-
-        with Image.open(data) as img:
-            img.rotate(-90, expand = True)
-            modified_img = img.tobytes()
-        return base64.encode(modified_img).decode('utf-8')
+        with Image.open(img_data) as img:
+            new_img = img.rotate(-90, expand = True)
+            new_stream = io.BytesIO()
+            new_img.save(new_stream, format = 'jpeg')
+            new_stream.seek(0)
+        return base64.b64encode(new_stream.getvalue()).decode('utf-8')
     
-    def to_square(self, img_data: str) -> str:
+    @staticmethod
+    def to_square(img_data: str) -> str:
         '''
             Will crop an image for it to be a square.
             It will use the X axis for the dimensions.
         '''
-        data = b64_to_iobytes(img_data)
-
-        with Image.open(data) as img:
+        with Image.open(img_data) as img:
             x_axis = img.size[0]
-            img.resize(size = (x_axis, x_axis,))
-            modified_img = img.tobytes()
-        return base64.b64encode(modified_img).decode('utf-8')
+            new_img = img.resize(size = (x_axis, x_axis,))
+            new_stream = io.BytesIO()
+            new_img.save(new_stream, format = 'jpeg')
+            new_stream.seek(0)
+        return base64.b64encode(new_stream.getvalue()).decode('utf-8')
     
-    def to_portrait(self, img_data: str) -> str:
+    @staticmethod
+    def to_portrait(img_data: str) -> str:
         '''
             For now, this method blurs the image. It will apply portrait effect to it.
         '''
-        data = b64_to_iobytes(img_data)
-
-        with Image.open(data) as img:
-            img.filter(ImageFilter.GaussianBlur(radius = 10))
-            modified_img = img.tobytes()
-        return base64.b64encode(modified_img).decode('utf-8')
+        with Image.open(img_data) as img:
+            new_img = img.filter(ImageFilter.GaussianBlur(radius = 10))
+            new_stream = io.BytesIO()
+            new_img.save(new_stream, format = 'jpeg')
+            new_stream.seek(0)
+        return base64.b64encode(new_stream.getvalue()).decode('utf-8')
     

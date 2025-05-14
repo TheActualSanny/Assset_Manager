@@ -29,7 +29,7 @@ class MongoManager:
             authSource = 'Assets'
         )
 
-    def _access_resource(self, collection_name: str, asset_name: str,
+    def _access_resource(self, collection_name: str, asset_names: str,
                          project_name: str, agency_name: str) -> Tuple[Collection, dict]:
         '''
             Considering that we use the same flow in both
@@ -37,7 +37,7 @@ class MongoManager:
         '''
         col = self._create_collection(collection_name)
         finalized_resource = {'agency' : agency_name, 'project' : project_name,
-                              'resource_id' : asset_name}
+                              'resource_ids' : asset_names}
         return (col, finalized_resource,)
     
     def _delete_resource(self, collection_name: str, asset_name: str,
@@ -80,7 +80,7 @@ class MongoManager:
             collection.
 
         '''
-        data = self._access_resource(collection_name = asset_type, asset_name = asset_name,
+        data = self._access_resource(collection_name = asset_type, asset_names = asset_name,
                                      project_name = project_name, agency_name = agency_name)
         
         for record in data[0].find({'agency' : agency_name, 'project' : project_name}):

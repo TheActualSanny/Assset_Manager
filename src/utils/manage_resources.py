@@ -3,8 +3,8 @@ import io
 import base64
 from minio import Minio
 from dotenv import load_dotenv
-from django.core.cache import cache
 from .additional_methods import formatted_title
+from utils.img_transformations import ImageManager
 
 load_dotenv()
 
@@ -20,7 +20,13 @@ class ManageMinio:
         '''
         self.__client = Minio(endpoint = f'{os.getenv('MINIO_HOST')}:9000', access_key = os.getenv('ACCESS_KEY'),
                               secret_key = os.getenv('SECRET_KEY'), secure = False)
-        self._resource_name_format = '{id}_{name}_blob.{ext}'
+        self._methods = {
+            'base' : ImageManager.load_base,
+            'vertical' : ImageManager.to_vertical,
+            'landscape' : ImageManager.to_landscape,
+            'square' : ImageManager.to_square,
+            'portrait' : ImageManager.to_portrait
+        }
 
     def _generate_name(self, asset_id: int, file_name: str, ext: str) -> str:
         '''
@@ -31,7 +37,7 @@ class ManageMinio:
         return self._resource_name_format.format(id = asset_id, name = file_name,
                                                  ext = ext)
 
-    def _insert_resource(self, rsrc: str, finalized_name: str,
+    def _insert_resource(self, rsrc: str, finalized_names: str,
                          content_type: str):
         '''
             The stream bytes that the
@@ -40,13 +46,21 @@ class ManageMinio:
             
             rsrc: The stringified file that contains the main data.
         '''
-        asset_data = base64.b64decode(rsrc)
-        file_like = io.BytesIO(asset_data)
+        base_img = self._methods['base'](rsrc)
+        base_img_stream = base_img[1]
+
+        self.__client.put_object(bucket_name = content_type, object_name = finalized_names['base'],
+                                 data = base_img_stream, 
+                                 length = len(base_img[0]))
 
         self._manage_buckets(content_type)
-        self.__client.put_object(bucket_name = content_type, object_name = finalized_name,
-                                 data = file_like, 
-                                 length = len(asset_data))
+        finalized_names.pop('base')
+        for format, finalized_name in finalized_names.items():
+            modified_data = base64.b64decode(self._methods[format](base_img[1]))
+            modified_stream = io.BytesIO(modified_data)
+            self.__client.put_object(bucket_name = content_type, object_name = finalized_name,
+                                     data = modified_stream, 
+                                     length = len(modified_data))
 
     def _manage_buckets(self, asset_bucket: str):
         '''

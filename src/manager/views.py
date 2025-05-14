@@ -108,9 +108,9 @@ class AssetView(APIView):
         asset = serializer.validated_data.get('asset')
         asset_type = serializer.validated_data.get('asset_type')
         formatted_params = format_params(asset = asset, asset_type = asset_type, 
-                             asset_id = curr_id, minio_mngr = minio_manager)
+                                         asset_id = curr_id)
         insert_resource.delay(project_name = project_name, agency_name = agency_name, asset_type = formatted_params['content_type'],
-                              asset_name = formatted_params['finalized_name'], asset_data = formatted_params['asset_data'])
+                              asset_names = formatted_params['finalized_names'], asset_data = formatted_params['asset_data'])
         return Response({'message' : 'Data successfully loaded!'})
     
 
