@@ -4,6 +4,7 @@ import base64
 from minio import Minio
 from dotenv import load_dotenv
 from django.core.cache import cache
+from .additional_methods import formatted_title
 
 load_dotenv()
 
@@ -72,6 +73,19 @@ class ManageMinio:
         return self.__client.presigned_get_object(bucket_name = content_type, 
                                                   object_name = asset_name)
 
+    def update_asset(self, rsrc: str, content_type: str, asset_name: str):
+        '''
+            Updates a pre-existing asset
+            with new data.
+        '''
+        data = base64.b64decode(rsrc)
+        stream = io.BytesIO(data)
+
+        objects = self.__client.list_objects(bucket_name = content_type)
+        for object in objects:
+            if formatted_title(object.object_name) == formatted_title(asset_name):
+                self.__client.put_object(bucket_name = content_type, object_name = object.object_name,
+                                         data = stream, length = len(data))
     def _resource_exists(self, blob_name: str) -> bool:
         '''
             Checks if a given resource is inserted into minio.

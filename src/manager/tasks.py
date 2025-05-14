@@ -15,9 +15,14 @@ def insert_resource(project_name: str, agency_name: str, asset_type: str,
         Both of the insert methods are called here in order to make this whole process
         a shared task for celery.
     '''
-    minio_manager._insert_resource(rsrc = asset_data, finalized_name = asset_name,
-                                                content_type = asset_type)
-    mongo_manager._insert_resource(agency_name = agency_name, project_name = project_name,
+    
+    if mongo_manager.document_exists(asset_type = asset_type, asset_name = asset_name, project_name = project_name,
+                                     agency_name = agency_name):
+        minio_manager.update_asset(rsrc = asset_data, content_type = asset_type, asset_name = asset_name)
+    else:
+        minio_manager._insert_resource(rsrc = asset_data, finalized_name = asset_name,
+                                   content_type = asset_type)
+        mongo_manager._insert_resource(agency_name = agency_name, project_name = project_name,
                                 asset_name = asset_name, collection_name = asset_type)
 
 @shared_task    

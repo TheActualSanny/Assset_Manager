@@ -1,8 +1,9 @@
 import os
 import pymongo
-from pymongo.collection import Collection
 from typing import Tuple, List
 from dotenv import load_dotenv
+from pymongo.collection import Collection
+from .additional_methods import formatted_title
 
 load_dotenv()
 
@@ -50,7 +51,7 @@ class MongoManager:
         data[1].pop('resource_id')
         for record in data[0].find(data[1]):
             resource_title = record.get('resource_id')
-            if MongoManager._formatted_title(resource_title) == asset_name:
+            if formatted_title(resource_title) == asset_name:
                return data[0].find_one_and_delete(filter = record).get('resource_id')
 
     def _create_collection(self, collection_name: str) -> Collection:
@@ -84,7 +85,7 @@ class MongoManager:
         
         for record in data[0].find({'agency' : agency_name, 'project' : project_name}):
             asset_id = record.get('resource_id')
-            if MongoManager._formatted_title(asset_id) == asset_name:
+            if formatted_title(asset_id) == asset_name:
                 return asset_id
     def _get_records(self) -> List[str]:
         '''
@@ -93,11 +94,13 @@ class MongoManager:
         
         return self.__client['assets'].list_collection_names()
     
-    @staticmethod
-    def _formatted_title(file_name: str) -> str:
+    def document_exists(self, asset_type: str, asset_name: str,
+               project_name: str, agency_name: str) -> bool:
         '''
-            In manager classes' methods where we
-            do lookups for certain assets, this method will be
-            called to compare the actual names instead of blob names.
+            Checks if a passed asset for the passed agency's project
+            already exists. If it does, we will run the update_resource.
         '''
-        return file_name.split('_')[1]
+        collection = self._create_collection(asset_type)
+        for document in collection.find({'agency' : agency_name, 'project' : project_name}):
+            if formatted_title(document['resource_id']) == formatted_title(asset_name):
+                return True
