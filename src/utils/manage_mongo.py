@@ -74,7 +74,7 @@ class MongoManager:
         data[0].insert_one(document = data[1])
     
     def _get_resource(self, asset_type: str, agency_name: str, 
-                      project_name: str, asset_name: str) -> str:
+                      project_name: str, asset_name: str, asset_format: str) -> str:
         '''
             Finds a requested user in the respective 
             collection.
@@ -82,11 +82,12 @@ class MongoManager:
         '''
         data = self._access_resource(collection_name = asset_type, asset_names = asset_name,
                                      project_name = project_name, agency_name = agency_name)
-        
+        found_data = dict()
         for record in data[0].find({'agency' : agency_name, 'project' : project_name}):
-            asset_id = record.get('resource_id')
+            asset_id = record.get('resource_ids').get(asset_format)
             if formatted_title(asset_id) == asset_name:
                 return asset_id
+            
     def _get_records(self) -> List[str]:
         '''
             Must make sure that it doesn't create a new collection.

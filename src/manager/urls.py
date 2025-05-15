@@ -14,6 +14,6 @@ urlpatterns = [
          views.AssetView.as_view(), name = 'asset-endpoint'),
     path('asset/<str:agency_name>/<str:project_name>/<str:asset_name>/',
          views.AssetViewDetailed.as_view(), name = 'asset-delete-endpoint'),
-    path('asset/<str:agency_name>/<str:project_name>/<str:asset_name>/<str:asset_type>/',
+    path('asset/<str:agency_name>/<str:project_name>/<str:asset_name>/<str:asset_type>/<str:asset_format>/',
          views.GetAssetView.as_view(), name = 'asset-get-endpoint'),
 ]

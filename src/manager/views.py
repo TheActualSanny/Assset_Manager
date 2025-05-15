@@ -134,8 +134,9 @@ class AssetViewDetailed(APIView):
 class GetAssetView(APIView):
     permissison_classes = [IsAuthenticated]
     
-    def get(self, request, agency_name: str, project_name: str, asset_name: str, asset_type: str):
+    def get(self, request, agency_name: str, project_name: str, asset_name: str, asset_type: str,
+            asset_format: str):
         finalized_asset_name = mongo_manager._get_resource(asset_type = asset_type, agency_name = agency_name,
-                                                           project_name = project_name, asset_name = asset_name)
+                                                           project_name = project_name, asset_name = asset_name, asset_format = asset_format)
         url = minio_manager._get_resource(content_type = asset_type, asset_name = finalized_asset_name)
         return Response({'url' : url})
