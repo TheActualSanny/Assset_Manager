@@ -70,12 +70,13 @@ class ManageMinio:
         if not self.__client.bucket_exists(bucket_name = asset_bucket):
             self.__client.make_bucket(bucket_name = asset_bucket)
 
-    def _delete_resource(self, content_type: str, asset_name: str):
+    def _delete_resource(self, content_type: str, asset_names: str):
         '''
             Deletes a given asset from the bucket.
         '''
-        if asset_name:
-            self.__client.remove_object(bucket_name = content_type, object_name = asset_name)
+        if asset_names:
+            for asset_name in asset_names.values():
+                self.__client.remove_object(bucket_name = content_type, object_name = asset_name)
         else:
             print('Doesnt exist!')
 

@@ -48,11 +48,11 @@ class MongoManager:
             so that we can do the lookup in Minio.
         '''
         data = self._access_resource(collection_name, asset_name, project_name, agency_name)
-        data[1].pop('resource_id')
+        data[1].pop('resource_ids')
         for record in data[0].find(data[1]):
-            resource_title = record.get('resource_id')
-            if formatted_title(resource_title) == asset_name:
-               return data[0].find_one_and_delete(filter = record).get('resource_id')
+            resource_titles = record.get('resource_ids')
+            if formatted_title(resource_titles['base']) == asset_name:
+               return data[0].find_one_and_delete(filter = record).get('resource_ids')
 
     def _create_collection(self, collection_name: str) -> Collection:
         '''

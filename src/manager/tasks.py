@@ -31,9 +31,9 @@ def delete_resource(project_name: str, agency_name: str, asset_type: str,
     '''
         Deletes the asset that the user passed (if it exists).
     ''' 
-    resource_name = mongo_manager._delete_resource(collection_name = asset_type, asset_name = asset_name,
+    resource_names = mongo_manager._delete_resource(collection_name = asset_type, asset_name = asset_name,
                                                 project_name = project_name, agency_name = agency_name)
-    minio_manager._delete_resource(content_type = asset_type, asset_name = resource_name)
+    minio_manager._delete_resource(content_type = asset_type, asset_names = resource_names)
 
 @shared_task
 def delete_project_data(project_name: str) -> None:
