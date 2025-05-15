@@ -35,9 +35,12 @@ def get_data(agency_name: str, lookup_type: str,
         response_dict[collection] = dict()
         assets = mongo_mngr._create_collection(collection)
         for asset in assets.find(find_condition):
-            resource_name = asset['resource_id']
-            response_dict[collection][f'{resource_name}'] = minio_mngr._get_resource(asset_name = resource_name,
-                                                                         content_type = collection)
+            resource_names = asset['resource_ids']
+            asset_base_name = resource_names['base']
+            response_dict[collection][asset_base_name] = dict()
+            for resource_format, resource_name in resource_names.items():
+                response_dict[collection][asset_base_name][f'{resource_format}'] = minio_mngr._get_resource(asset_name = resource_name,
+                                                                            content_type = collection)
     return response_dict
 
 def format_params(asset: InMemoryUploadedFile, asset_type: str, asset_id: int) -> dict:
