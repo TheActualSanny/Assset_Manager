@@ -90,7 +90,7 @@ class DetailedProjectView(GenericAPIView, DestroyModelMixin):
         return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
     
     def delete(self, request, *args, **kwargs):
-        delete_project_data.delay(project_name = kwargs.get('pk'))
+        delete_project_data.delay(project_name = kwargs.get('pk'), agency_name = kwargs.get('agency_name'))
         return self.destroy(request, *args, **kwargs)
     
 class AssetView(APIView):

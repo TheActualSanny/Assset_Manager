@@ -36,7 +36,7 @@ def delete_resource(project_name: str, agency_name: str, asset_type: str,
     minio_manager._delete_resource(content_type = asset_type, asset_names = resource_names)
 
 @shared_task
-def delete_project_data(project_name: str) -> None:
+def delete_project_data(project_name: str, agency_name: str) -> None:
     '''
         We pass both managers and a project name as 
         arguments, and it deletes all records associated with a given project.
@@ -44,10 +44,11 @@ def delete_project_data(project_name: str) -> None:
     collections = mongo_manager._get_records()
     for collection_name in collections:
         records = mongo_manager._create_collection(collection_name)
-        for record in records.find({'project' : project_name}):
+        for record in records.find({'project' : project_name, 'agency' : agency_name}):
             records.find_one_and_delete({'_id' : record['_id']})
+            asset_ids = record['resource_ids']
             minio_manager._delete_resource(content_type = collection_name,
-                                        asset_name = record['resource_id'])
+                                           asset_names = asset_ids)
 
 @shared_task
 def delete_agency_data(agency_name: str) -> None:
@@ -57,6 +58,6 @@ def delete_agency_data(agency_name: str) -> None:
     '''
     projects = Project.objects.prefetch_related('associated_agency').filter(associated_agency__pk = agency_name)
     for project in projects:
-        delete_project_data.delay(project_name = project.project_name)
+        delete_project_data.delay(project_name = project.project_name, agency_name = agency_name)
     Agency.objects.filter(agency_name = agency_name).delete()
     
