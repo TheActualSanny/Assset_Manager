@@ -110,7 +110,8 @@ class AssetView(APIView):
         formatted_params = format_params(asset = asset, asset_type = asset_type, 
                                          asset_id = curr_id)
         insert_resource.delay(project_name = project_name, agency_name = agency_name, asset_type = formatted_params['content_type'],
-                              asset_names = formatted_params['finalized_names'], asset_data = formatted_params['asset_data'])
+                              asset_names = formatted_params['finalized_names'], asset_data = formatted_params['asset_data'],
+                              asset_ext = formatted_params['asset_ext'])
         return Response({'message' : 'Data successfully loaded!'})
     
 

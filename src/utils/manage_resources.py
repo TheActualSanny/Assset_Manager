@@ -38,7 +38,7 @@ class ManageMinio:
                                                  ext = ext)
 
     def _insert_resource(self, rsrc: str, finalized_names: str,
-                         content_type: str):
+                         content_type: str, asset_ext: str):
         '''
             The stream bytes that the
             user sends in the request
@@ -56,7 +56,7 @@ class ManageMinio:
         self._manage_buckets(content_type)
         finalized_names.pop('base')
         for format, finalized_name in finalized_names.items():
-            modified_data = base64.b64decode(self._methods[format](base_img[1]))
+            modified_data = base64.b64decode(self._methods[format](base_img[1], asset_ext))
             modified_stream = io.BytesIO(modified_data)
             self.__client.put_object(bucket_name = content_type, object_name = finalized_name,
                                      data = modified_stream, 
