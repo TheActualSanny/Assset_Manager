@@ -46,6 +46,7 @@ class ManageMinio:
             
             rsrc: The stringified file that contains the main data.
         '''
+        self._manage_buckets(asset_bucket = content_type)
         base_img = self._methods['base'](rsrc)
         base_img_stream = base_img[1]
 

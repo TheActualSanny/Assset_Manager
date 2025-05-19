@@ -26,7 +26,7 @@ class MongoManager:
             port = int(os.getenv('MONGO_PORT')),
             username = os.getenv('MONGO_USER'),
             password = os.getenv('MONGO_PASS'),
-            authSource = 'Assets'
+            authSource = os.getenv('COLLECTION')
         )
 
     def _access_resource(self, collection_name: str, asset_names: str,

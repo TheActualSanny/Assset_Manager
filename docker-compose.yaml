@@ -1,0 +1,94 @@
+version: 1.0.0
+
+services:
+  api:
+    depends_on:
+      postgre:
+        condition: service_healthy
+      celery:
+        condition: service_started
+      redis:
+        condition: service_started
+      mongo:
+        condition: service_started
+      minio:
+        condition: service_started
+         
+    ports:
+    - "8000:8000"
+    build: 
+      context: .
+    working_dir: /src
+    command: sh -c "alembic upgrade head && fastapi dev main.py --host 0.0.0.0 --port 8000"
+    
+  celery:
+    depends_on:
+      redis:
+        condition: service_started
+      postgre:
+        condition: service_healthy
+      mongo:
+        condition: service_started
+      minio:
+        condition: service_started
+
+    build: 
+      context: .
+    command: celery -A src.dependencies worker --pool=solo -l info
+    volumes:
+      - ./celery-data:/app
+
+  postgre:
+    image: postgres
+    ports:
+      - 5432:5432
+    volumes:
+      - ./pg-data/:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=${PG_DB}
+      - POSTGRES_USE=${PG_USER}
+      - POSTGRES_PASSWORD=${PG_PASS}
+    env_file:
+      - .env
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    
+  redis:
+    image: redis
+    ports:
+      - '6379:6379' 
+    volumes:
+      - cache:/data
+  
+  mongo:
+    image: mongo:6
+    ports:
+      - '27017:27017'
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME = ${MONGO_USER}
+      - MONGO_INITDB_ROOT_PASSWORD = ${MONGO_PASS}
+    env_file:
+      - .env
+    volumes:
+      - /mongo-data:/data/db
+
+  minio:
+    image: minio/minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - /minio-data/:/data
+    environment:
+      - MINIO_ROOT_USER=${MINIO_USER}
+      - MINIO_ROOT_PASSWORD=${MINIO_PASS}
+    env_file:
+      - .env
+    command: server /data --console-address ":9001"
+
+volumes:
+  cache:
+    driver: local
