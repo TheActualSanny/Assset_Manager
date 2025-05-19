@@ -45,6 +45,9 @@ def delete_project_data(project_name: str, agency_name: str) -> None:
         We pass both managers and a project name as 
         arguments, and it deletes all records associated with a given project.
     '''
+    with session() as conn:
+        conn.query(Project).filter(Project.project_name == project_name).delete()
+        conn.commit()
     collections = mongo_manager._get_records()
     for collection_name in collections:
         records = mongo_manager._create_collection(collection_name)
@@ -61,7 +64,8 @@ def delete_agency_data(agency_name: str) -> None:
         deletes all of the assets associated with a given agency.
     '''
     with session() as conn:
-        projects = conn.query(Project).filter(Project.associated_agency == agency_name).all()
+        projects = conn.query(Project).filter(Project.corresponding_agency == agency_name).all()
         for project in projects:
             delete_project_data.delay(project_name = project.project_name, agency_name = agency_name)
         conn.query(Agency).filter(agency_name == agency_name).delete()
+        conn.commit()

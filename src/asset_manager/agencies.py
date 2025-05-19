@@ -3,6 +3,14 @@ from src.postgre_management.engine_creation import db_engine
 from src.postgre_management.orm_setup import Agency, Project
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.exc import IntegrityError
+from .serializers import ValidateRecords
+from src.utils_methods.util_methods import get_data
+from src.utils_methods.manage_mongo import MongoManager
+from src.utils_methods.manage_resources import ManageMinio
+from src.dependencies.tasks import delete_agency_data
+
+minio_manager = ManageMinio()
+mongo_manager = MongoManager()
 
 session = sessionmaker(bind = db_engine)
 
@@ -24,25 +32,22 @@ async def add_agency(agency: str):
             msg = f'Successfully added {agency}!'
     return {'msg' : msg}
 
-@router.delete('/delete/{agency}', status_code = status.HTTP_204_NO_CONTENT)
-async def delete_agency(agency: str):
-    '''
-        For now, this only removes the record
-        from the table. It will however schedule a celery task which will
-        delete both minio assets and MongoDB records.
-    '''
-    with session() as conn:
-        record = conn.query(Agency).filter(Agency.agency_name == agency).delete()
-        if not record:
-            msg = f'No agency with the name: {agency} was found!'
-        else:
-            msg = f'Successfully deleted the agency {agency}'
-        conn.commit()
-    return {'msg' : msg}
-
 @router.get('/assets/{agency}', status_code = status.HTTP_200_OK)
-async def get_agency_assets(agency: str):
+async def get_agency_assets(agency_name: str):
     '''
         This will return all of the assets associated with the
         passed agency.
     '''
+    data = get_data(agency_name = agency_name, lookup_type = 'agency', 
+                    mongo_mngr = mongo_manager, minio_mngr = minio_manager)
+    return {'msg' : 'Successfully fetched the agency data!', 
+            'data' : data}
+
+@router.delete('/delete/{agency_name}')
+async def delete_agency(agency_name: str):
+    '''
+        Deletes all of the assets associated with the passed agency
+    '''
+    ValidateRecords(agency_name = agency_name, project_name = None, project_validation = False)
+    delete_agency_data.delay(agency_name = agency_name)
+    return {'msg' : 'Successfully deleted the agency!'}
